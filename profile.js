@@ -79,8 +79,7 @@
       root.innerHTML =
         '<div class="topbar">' +
         '  <div class="brand">' +
-        '    <span class="brand-spade">&#9824;</span>' +
-        '    <div class="brand-text">upmoney</div>' +
+        '    <img class="brand-logo" src="assets/logo.png" alt="upmoney" />' +
         '  </div>' +
         '  <button class="bal-chip" data-deposit>' +
         '    <span data-balance>' + fmt(st.balance) + '</span>' + diamond(18) +
@@ -91,7 +90,7 @@
         '  <div class="profile-ava">' + name.charAt(0).toUpperCase() + '</div>' +
         '  <div>' +
         '    <div class="profile-name">' + name + '</div>' +
-        '    <div class="profile-sub"><span class="demo-badge">' + (API.online ? 'TON · БЕТА' : 'ДЕМО-АККАУНТ') + '</span></div>' +
+        '    <div class="profile-sub"><span class="demo-badge">' + (API.online ? 'TON' : 'ДЕМО-АККАУНТ') + '</span></div>' +
         '  </div>' +
         '</div>' +
 
@@ -139,7 +138,7 @@
         '<div class="hist">' + (hist || '<div class="empty">Пока пусто — сыграйте первую игру</div>') + '</div>' +
 
         (API.online
-          ? '<div class="demo-note" style="margin-top:18px">Бета · реальные пополнения и выводы отключены.<br>Баланс начисляет администратор.</div>'
+          ? '<div class="demo-note" style="margin-top:18px">Пополнение и вывод — в TON.<br>Выплаты вручную, обычно до 24 часов.</div>'
           : '<button class="btn btn-ghost" id="reset" style="margin-top:18px">Сбросить демо-баланс</button>' +
             '<div class="demo-note" style="margin-top:10px">Демо-режим · реальные депозиты и выводы подключаются отдельно</div>');
 
@@ -215,7 +214,8 @@
       });
 
       root.querySelector('#withdraw').addEventListener('click', function () {
-        UI.toast(API.online ? 'Выводы откроются после запуска оператора' : 'Демо: вывод появится после подключения мерчанта');
+        haptic('light');
+        UI.withdraw();
       });
 
       var resetBtn = root.querySelector('#reset');

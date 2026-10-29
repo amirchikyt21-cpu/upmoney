@@ -99,14 +99,58 @@
 
     deposit: function () {
       if (API.online) {
-        this.sheet(
-          '<div class="sheet-grab"></div>' +
-          '<div class="sheet-title">Пополнение</div>' +
-          '<div class="sheet-note" style="text-align:left">Бета-режим: реальные пополнения пока отключены.<br><br>' +
-          'Баланс начисляет администратор вручную. Напиши в поддержку — зачислим тестовые TON для проверки игр.</div>' +
-          '<button class="btn btn-green big" id="beta-ok" style="margin-top:14px">Понятно</button>'
-        );
-        sheetBody.querySelector('#beta-ok').addEventListener('click', function () { UI.closeSheet(); });
+        this.sheet('<div class="sheet-grab"></div><div class="sheet-title">Пополнение</div>' +
+          '<div class="mini-label" style="margin:0 4px 12px">Загружаем реквизиты…</div>');
+
+        API.payInfo().then(function (info) {
+          if (!info.wallet) {
+            UI.sheet('<div class="sheet-grab"></div><div class="sheet-title">Пополнение</div>' +
+              '<div class="sheet-note" style="text-align:left">Приём TON ещё не настроен. Напиши администратору — включим за минуту.</div>' +
+              '<button class="btn btn-ghost big" id="dep-close" style="margin-top:14px">Закрыть</button>');
+            sheetBody.querySelector('#dep-close').addEventListener('click', function () { UI.closeSheet(); });
+            return;
+          }
+
+          var minTon = API.toTon(info.min_deposit_nano);
+
+          UI.sheet(
+            '<div class="sheet-grab"></div>' +
+            '<div class="sheet-title">Пополнение TON</div>' +
+            '<div class="mini-label" style="margin:0 4px 8px">Адрес кошелька</div>' +
+            '<div class="pay-box" id="pay-wallet">' + info.wallet + '</div>' +
+            '<button class="btn btn-ghost btn-sm" id="copy-wallet" style="width:100%;margin-bottom:14px">Скопировать адрес</button>' +
+            '<div class="mini-label" style="margin:0 4px 8px">Комментарий к переводу · обязателен</div>' +
+            '<div class="pay-box pay-box--accent" id="pay-memo">' + info.memo + '</div>' +
+            '<button class="btn btn-ghost btn-sm" id="copy-memo" style="width:100%">Скопировать комментарий</button>' +
+            '<div class="sheet-note" style="text-align:left;margin-top:14px">' +
+            'Минимум <b>' + fmt(minTon) + ' TON</b>. Переводи TON на адрес и вставь комментарий — ' +
+            'по нему платёж привяжется к твоему аккаунту. Без комментария зачислить не сможем.<br><br>' +
+            'Зачисление проверяет администратор, обычно в течение часа.' +
+            '</div>' +
+            '<button class="btn btn-green big" id="dep-ok" style="margin-top:14px">Понятно</button>'
+          );
+
+          function copy(text, label) {
+            var ok = false;
+            try {
+              if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+                ok = true;
+              }
+            } catch (e) {}
+            haptic('light');
+            UI.toast(ok ? label + ' скопирован' : 'Не удалось скопировать');
+          }
+
+          sheetBody.querySelector('#copy-wallet').addEventListener('click', function () { copy(info.wallet, 'Адрес'); });
+          sheetBody.querySelector('#copy-memo').addEventListener('click', function () { copy(info.memo, 'Комментарий'); });
+          sheetBody.querySelector('#dep-ok').addEventListener('click', function () { UI.closeSheet(); });
+        }).catch(function () {
+          UI.sheet('<div class="sheet-grab"></div><div class="sheet-title">Пополнение</div>' +
+            '<div class="sheet-note">Не удалось загрузить реквизиты. Попробуй ещё раз.</div>' +
+            '<button class="btn btn-ghost big" id="dep-close" style="margin-top:14px">Закрыть</button>');
+          sheetBody.querySelector('#dep-close').addEventListener('click', function () { UI.closeSheet(); });
+        });
         return;
       }
 
@@ -150,6 +194,101 @@
       sheetBody.querySelector('#connect').addEventListener('click', function () {
         UI.closeSheet();
         UI.toast('Подключение кошелька появится после настройки мерчанта');
+      });
+    },
+
+    withdraw: function () {
+      if (!API.online) {
+        this.toast('В демо-режиме вывод недоступен');
+        return;
+      }
+
+      this.sheet('<div class="sheet-grab"></div><div class="sheet-title">Вывод</div>' +
+        '<div class="mini-label" style="margin:0 4px 12px">Загружаем данные…</div>');
+
+      API.payInfo().then(function (info) {
+        var minTon = API.toTon(info.min_withdraw_nano);
+        var bal = API.toTon(info.balance_nano);
+        var preset = [1, 2, 5, 10].filter(function (v) { return v <= bal; });
+        var chips = preset.map(function (v) {
+          return '<button class="c-chip" data-w="' + v + '">' + fmt(v) + '</button>';
+        }).join('');
+
+        UI.sheet(
+          '<div class="sheet-grab"></div>' +
+          '<div class="sheet-title">Вывод TON</div>' +
+          '<div class="mini-label" style="margin:0 4px 8px">Баланс ' + fmt(bal) + ' TON · минимум ' + fmt(minTon) + ' TON</div>' +
+          '<div class="bet-input" style="margin-bottom:10px">' +
+          '  <input id="w-amount" type="text" inputmode="decimal" value="' + fmt(Math.max(minTon, Math.min(bal, minTon))) + '" />' +
+          '  <span class="bet-cur">TON</span>' +
+          '</div>' +
+          '<div class="chips" style="margin-bottom:14px">' + chips +
+          '<button class="c-chip" data-w="max">Всё</button></div>' +
+          '<div class="mini-label" style="margin:0 4px 8px">Кошелёк TON для выплаты</div>' +
+          '<div class="bet-input" style="margin-bottom:14px">' +
+          '  <input id="w-wallet" type="text" placeholder="UQ…" />' +
+          '</div>' +
+          '<button class="btn btn-green big" id="w-send">Создать заявку</button>' +
+          '<div class="sheet-note" style="text-align:left;margin-top:12px">' +
+          'Деньги сразу списываются с баланса и ждут выплаты. Администратор отправляет TON вручную, обычно до 24 часов. ' +
+          'Заявку можно увидеть в профиле.' +
+          '</div>'
+        );
+
+        var amountEl = sheetBody.querySelector('#w-amount');
+        var walletEl = sheetBody.querySelector('#w-wallet');
+        var send = sheetBody.querySelector('#w-send');
+        var chipBtns = sheetBody.querySelectorAll('[data-w]');
+
+        for (var i = 0; i < chipBtns.length; i++) {
+          chipBtns[i].addEventListener('click', function () {
+            var v = this.dataset.w;
+            amountEl.value = v === 'max' ? fmt(bal) : fmt(Number(v));
+            haptic('light');
+          });
+        }
+
+        send.addEventListener('click', function () {
+          var amount = parseFloat(String(amountEl.value).replace(',', '.'));
+          var wallet = String(walletEl.value || '').trim();
+
+          if (!isFinite(amount) || amount < minTon) {
+            UI.toast('Минимум ' + fmt(minTon) + ' TON', 'error');
+            haptic('error');
+            return;
+          }
+          if (amount > bal) {
+            UI.toast('На балансе меньше', 'error');
+            haptic('error');
+            return;
+          }
+          if (wallet.length < 20) {
+            UI.toast('Введи адрес кошелька TON', 'error');
+            haptic('error');
+            return;
+          }
+
+          send.disabled = true;
+          send.textContent = 'Отправляем…';
+
+          API.withdraw(API.toNano(amount), wallet).then(function (r) {
+            UI.balance();
+            UI.closeSheet();
+            haptic('success');
+            UI.toast('Заявка №' + r.id + ' принята · выплата до 24 ч', 'success');
+          }).catch(function (e) {
+            send.disabled = false;
+            send.textContent = 'Создать заявку';
+            haptic('error');
+            if (e.message === 'INSUFFICIENT') UI.toast('Недостаточно средств', 'error');
+            else if (e.message === 'BAD_WALLET') UI.toast('Проверь адрес кошелька', 'error');
+            else if (e.message === 'BAD_AMOUNT') UI.toast('Сумма ниже минимума', 'error');
+            else UI.toast('Заявка не создалась', 'error');
+          });
+        });
+      }).catch(function () {
+        UI.toast('Не удалось загрузить данные', 'error');
+        UI.closeSheet();
       });
     }
   };

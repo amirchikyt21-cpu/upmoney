@@ -184,6 +184,22 @@
 
     crashPoll: function (round) {
       return API.rpc('crash_poll', { p_token: API.token, p_round: round });
+    },
+
+    payInfo: function () {
+      return API.rpc('pay_info', { p_token: API.token });
+    },
+
+    withdraw: function (amountNano, wallet) {
+      return API.rpc('withdraw_request', {
+        p_token: API.token,
+        p_amount_nano: amountNano,
+        p_wallet: wallet
+      }).then(API.sync);
+    },
+
+    myWithdrawals: function () {
+      return API.rpc('my_withdrawals', { p_token: API.token });
     }
   };
 
