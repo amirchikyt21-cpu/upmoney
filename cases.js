@@ -8,13 +8,10 @@
 
   var CASES = [
     {
-      id: 'neon', name: 'Неон', emoji: '\uD83D\uDCAB', price: 0.5,
+      id: 'neon', name: 'Всё или ничего', emoji: '\uD83C\uDF81', price: 0.5,
       items: [
-        { name: 'Осколок', emoji: '\uD83D\uDD39', rarity: '', value: 0.05, w: 50 },
-        { name: 'Кристалл', emoji: '\uD83D\uDCAB', rarity: 'rare', value: 0.25, w: 30 },
-        { name: 'Ледяной клинок', emoji: '\uD83D\uDDE1\uFE0F', rarity: 'rare', value: 0.8, w: 11.5 },
-        { name: 'Аура', emoji: '\uD83D\uDD2E', rarity: 'epic', value: 2, w: 5.5 },
-        { name: 'Корона льда', emoji: '\uD83D\uDC51', rarity: 'legend', value: 8, w: 1.2 }
+        { name: 'Snoop Dog NFT', emoji: '\uD83D\uDC36', img: 'assets/snoop-dog.jpg', rarity: 'legend', value: 5, w: 26 },
+        { name: '0.25 TON', emoji: '\uD83E\uDE99', img: '', rarity: '', value: 0.25, w: 974 }
       ]
     },
     {
@@ -23,9 +20,9 @@
         { name: 'Снежок', emoji: '\uD83D\uDD39', rarity: '', value: 0.2, w: 48 },
         { name: 'Ледяная маска', emoji: '\uD83C\uDFAD', rarity: 'rare', value: 1, w: 30 },
         { name: 'Клинок', emoji: '\uD83D\uDDE1\uFE0F', rarity: 'rare', value: 3, w: 14 },
-        { name: 'Дракон', emoji: '\uD83D\uDC09', rarity: 'epic', value: 7, w: 6 },
-        { name: 'Абсолют', emoji: '\uD83D\uDC8E', rarity: 'epic', value: 18, w: 1.5 },
-        { name: 'Трон', emoji: '\uD83D\uDC51', rarity: 'legend', value: 25, w: 0.5 }
+        { name: 'Дракон', emoji: '\uD83D\uDC09', rarity: 'epic', value: 7, w: 5 },
+        { name: 'Абсолют', emoji: '\uD83D\uDC8E', rarity: 'epic', value: 18, w: 0.8 },
+        { name: 'Трон', emoji: '\uD83D\uDC51', rarity: 'legend', value: 25, w: 0.2 }
       ]
     },
     {
@@ -34,10 +31,10 @@
         { name: 'Пыль', emoji: '\u2728', rarity: '', value: 0.5, w: 42 },
         { name: 'Печать', emoji: '\uD83D\uDD31', rarity: 'rare', value: 2, w: 30 },
         { name: 'Скипетр', emoji: '\u269C\uFE0F', rarity: 'rare', value: 5, w: 14 },
-        { name: 'Корона', emoji: '\uD83D\uDC51', rarity: 'epic', value: 12, w: 7 },
-        { name: 'Феникс', emoji: '\uD83D\uDD25', rarity: 'epic', value: 30, w: 2.5 },
-        { name: 'Джекпот', emoji: '\uD83D\uDC8E', rarity: 'legend', value: 60, w: 0.8 },
-        { name: 'Легенда', emoji: '\uD83C\uDF1F', rarity: 'legend', value: 150, w: 0.2 }
+        { name: 'Корона', emoji: '\uD83D\uDC51', rarity: 'epic', value: 12, w: 6 },
+        { name: 'Феникс', emoji: '\uD83D\uDD25', rarity: 'epic', value: 30, w: 2 },
+        { name: 'Джекпот', emoji: '\uD83D\uDC8E', rarity: 'legend', value: 60, w: 0.4 },
+        { name: 'Легенда', emoji: '\uD83C\uDF1F', rarity: 'legend', value: 150, w: 0.05 }
       ]
     }
   ];
@@ -56,6 +53,8 @@
 
   function fromServer(list) {
     return list.map(function (c) {
+      var total = 0;
+      c.items.forEach(function (i) { total += Number(i.weight) || 0; });
       return {
         id: c.key,
         name: c.title,
@@ -65,13 +64,33 @@
           return {
             name: i.name,
             emoji: i.emoji,
+            img: i.img || '',
             rarity: i.rarity || '',
             value: API.toTon(i.value_nano),
-            w: 1
+            w: Number(i.weight) || 0,
+            chance: total ? (Number(i.weight) || 0) / total : 0
           };
         })
       };
     });
+  }
+
+  function chanceOf(caseObj, item) {
+    if (typeof item.chance === 'number') return item.chance;
+    var total = 0;
+    caseObj.items.forEach(function (i) { total += i.w; });
+    return total ? item.w / total : 0;
+  }
+
+  function icon(item, cls) {
+    if (item.img) return '<img class="' + cls + '" src="' + item.img + '" alt="" />';
+    return '<span class="' + cls + '-emoji">' + item.emoji + '</span>';
+  }
+
+  function topItem(caseObj) {
+    var best = caseObj.items[0];
+    caseObj.items.forEach(function (i) { if (i.value > best.value) best = i; });
+    return best;
   }
 
   UI.register('cases', {
@@ -95,6 +114,8 @@
 
         '<div class="case-tabs" id="tabs"></div>' +
 
+        '<div class="case-hero" id="hero"></div>' +
+
         '<div class="roulette"><div class="roulette-strip" id="strip"></div></div>' +
 
         '<div class="case-result" id="result" hidden></div>' +
@@ -105,19 +126,30 @@
         '    <b id="price" style="font-size:17px">0.50 TON</b>' +
         '  </div>' +
         '  <button class="btn btn-green big" id="action">Открыть кейс</button>' +
+        '</div>' +
+
+        '<div class="panel cp">' +
+        '  <div class="cp-head"><b>Что внутри</b><span id="drop-count"></span></div>' +
+        '  <div class="drop-list" id="drops"></div>' +
         '</div>';
 
       var tabsEl = root.querySelector('#tabs');
+      var heroEl = root.querySelector('#hero');
       var stripEl = root.querySelector('#strip');
       var resultEl = root.querySelector('#result');
       var priceEl = root.querySelector('#price');
       var action = root.querySelector('#action');
+      var dropsEl = root.querySelector('#drops');
+      var dropCountEl = root.querySelector('#drop-count');
       var rouletteEl = root.querySelector('.roulette');
 
       function renderTabs() {
         tabsEl.innerHTML = CASES.map(function (c, i) {
+          var top = topItem(c);
           return '<button class="case-card' + (i === selected ? ' active' : '') + '" data-case="' + i + '">' +
-            '<div class="case-emoji">' + c.emoji + '</div>' +
+            (top.img
+              ? '<img class="case-thumb" src="' + top.img + '" alt="" />'
+              : '<div class="case-emoji">' + c.emoji + '</div>') +
             '<div class="case-name">' + c.name + '</div>' +
             '<div class="case-price">' + fmt(c.price) + ' TON</div>' +
             '</button>';
@@ -128,7 +160,9 @@
           btns[i].addEventListener('click', function () {
             if (spinning) return;
             selected = Number(this.dataset.case);
+            resultEl.hidden = true;
             renderTabs();
+            renderHero();
             renderIdle();
             syncPrice();
             haptic('light');
@@ -136,12 +170,47 @@
         }
       }
 
+      function renderHero() {
+        var c = CASES[selected];
+        var top = topItem(c);
+        var pct = chanceOf(c, top) * 100;
+
+        heroEl.innerHTML =
+          '<div class="hero-art ' + top.rarity + '">' + icon(top, 'hero-img') + '</div>' +
+          '<div class="hero-info">' +
+          '  <div class="mini-label">Главный дроп</div>' +
+          '  <div class="hero-name">' + top.name + '</div>' +
+          '  <div class="hero-val">' + fmt(top.value) + ' TON</div>' +
+          '  <div class="hero-chance">Шанс ' + pct.toFixed(1) + '%</div>' +
+          '</div>';
+      }
+
       function syncPrice() {
         priceEl.textContent = fmt(CASES[selected].price) + ' TON';
       }
 
+      function renderDrops() {
+        var c = CASES[selected];
+        var sorted = c.items.slice().sort(function (a, b) { return b.value - a.value; });
+
+        dropsEl.innerHTML = sorted.map(function (it) {
+          var pct = chanceOf(c, it) * 100;
+          return '<div class="drop-row ' + it.rarity + '">' +
+            '<div class="drop-icon">' + icon(it, 'drop-img') + '</div>' +
+            '<div class="drop-name">' + it.name + '</div>' +
+            '<div class="drop-val">' + fmt(it.value) + ' TON</div>' +
+            '<div class="drop-chance">' + pct.toFixed(1) + '%</div>' +
+            '</div>';
+        }).join('');
+
+        dropCountEl.textContent = sorted.length + ' шт.';
+      }
+
       function itemHTML(item) {
-        return '<div class="r-item ' + item.rarity + '">' + item.emoji + '<small>' + fmt(item.value) + '</small></div>';
+        return '<div class="r-item ' + item.rarity + '">' +
+          icon(item, 'r-img') +
+          '<small>' + fmt(item.value) + '</small>' +
+          '</div>';
       }
 
       function renderIdle() {
@@ -160,7 +229,8 @@
         pending = null;
 
         Store.state.inventory.unshift({
-          name: item.name, emoji: item.emoji, value: item.value, caseName: caseObj.name, t: Date.now()
+          name: item.name, emoji: item.emoji, img: item.img, value: item.value,
+          caseName: caseObj.name, t: Date.now()
         });
         Store.state.inventory = Store.state.inventory.slice(0, 24);
         Store.save();
@@ -169,8 +239,9 @@
         haptic('success');
 
         resultEl.hidden = false;
+        resultEl.className = 'case-result ' + (item.rarity || '');
         resultEl.innerHTML =
-          '<div style="font-size:38px;line-height:1">' + item.emoji + '</div>' +
+          '<div class="res-art">' + icon(item, 'res-img') + '</div>' +
           '<div class="name">' + item.name + '</div>' +
           '<div class="val">+' + fmt(item.value) + ' TON</div>';
 
@@ -232,6 +303,7 @@
           animate(caseObj, {
             name: r.name,
             emoji: r.emoji,
+            img: r.img || '',
             rarity: r.rarity || '',
             value: API.toTon(r.value_nano)
           });
@@ -251,6 +323,8 @@
       action.addEventListener('click', open);
 
       renderTabs();
+      renderHero();
+      renderDrops();
       renderIdle();
       syncPrice();
 
@@ -260,6 +334,8 @@
           CASES = fromServer(list);
           selected = 0;
           renderTabs();
+          renderHero();
+          renderDrops();
           renderIdle();
           syncPrice();
         }).catch(function () {});

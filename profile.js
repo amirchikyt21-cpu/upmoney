@@ -59,7 +59,10 @@
       var refLink = 'https://t.me/upmoney_app?start=ref_' + st.ref.code;
 
       var inventory = st.inventory.slice(0, 8).map(function (it) {
-        return '<div class="win-chip"><span style="font-size:16px">' + it.emoji + '</span>' +
+        var art = it.img
+          ? '<img src="' + it.img + '" alt="" style="width:24px;height:24px;border-radius:7px;object-fit:cover" />'
+          : '<span style="font-size:16px">' + it.emoji + '</span>';
+        return '<div class="win-chip">' + art +
           '<span>' + it.name + ' <b>+' + fmt(it.value) + '</b></span></div>';
       }).join('');
 
@@ -187,10 +190,10 @@
         var bonus = PROMOS[code];
         Store.add(bonus);
         promoInput.value = '';
-        setPromoStatus('Код ' + code + ' активирован · +' + fmt(bonus) + ' GRAM', 'ok');
+        setPromoStatus('Код ' + code + ' активирован · +' + fmt(bonus) + ' TON', 'ok');
         UI.balance();
         haptic('success');
-        UI.toast('+' + fmt(bonus) + ' GRAM', 'success');
+        UI.toast('+' + fmt(bonus) + ' TON', 'success');
       }
 
       root.querySelector('#promo-go').addEventListener('click', activatePromo);
@@ -235,9 +238,9 @@
         st.ref.earned = round3((st.ref.earned || 0) + cut);
         Store.add(cut);
         var el = root.querySelector('#ref-earned');
-        if (el) el.textContent = fmt(st.ref.earned) + ' GRAM';
+        if (el) el.textContent = fmt(st.ref.earned) + ' TON';
         haptic('success');
-        UI.toast('+' + fmt(cut) + ' GRAM · 5% от вывода ' + fr.name, 'success');
+        UI.toast('+' + fmt(cut) + ' TON · 5% от вывода ' + fr.name, 'success');
       }, 12000);
 
       this.destroy = function () { clearInterval(refTimer); };
