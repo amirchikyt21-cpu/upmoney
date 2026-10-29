@@ -81,6 +81,13 @@ body.in-game .screen { padding-bottom: 28px; }
 
 .bal-chip:active { transform: scale(.97); }
 
+.diamond {
+  display: inline-block;
+  border-radius: 30%;
+  object-fit: cover;
+  vertical-align: -3px;
+}
+
 /* ---------- sections ---------- */
 .section-title {
   margin: 20px 4px 10px;
@@ -565,6 +572,101 @@ body.in-game .screen { padding-bottom: 28px; }
 
 .case-result .name { font-size: 17px; font-weight: 900; }
 .case-result .val { font-size: 13px; font-weight: 700; color: var(--green); }
+
+.case-thumb {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  object-fit: cover;
+  display: block;
+  margin: 0 auto;
+}
+
+.case-hero {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card);
+  border: 1px solid #2b2b2b;
+  border-radius: 20px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.hero-art {
+  width: 84px; height: 84px;
+  flex: 0 0 84px;
+  border-radius: 16px;
+  background: #141414;
+  border: 1px solid #2d2d2d;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.hero-art.rare   { border-color: #4d8dff; box-shadow: 0 0 22px rgba(77,141,255,.35); }
+.hero-art.epic   { border-color: #b06bff; box-shadow: 0 0 22px rgba(176,107,255,.35); }
+.hero-art.legend { border-color: #ffb347; box-shadow: 0 0 26px rgba(255,179,71,.45); }
+
+.hero-img { width: 100%; height: 100%; object-fit: cover; }
+.hero-img-emoji { font-size: 40px; }
+
+.hero-info { flex: 1; min-width: 0; }
+.hero-name { font-size: 17px; font-weight: 900; margin-top: 4px; }
+.hero-val { font-size: 14px; font-weight: 800; color: var(--green); margin-top: 2px; }
+.hero-chance { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 4px; }
+
+.r-img {
+  width: 48px; height: 48px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.r-img-emoji { font-size: 34px; }
+
+.case-result .res-art {
+  width: 128px; height: 128px;
+  margin: 0 auto 8px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #141414;
+  border: 1px solid #2d2d2d;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.case-result.rare   .res-art { border-color: #4d8dff; box-shadow: 0 0 30px rgba(77,141,255,.4); }
+.case-result.epic   .res-art { border-color: #b06bff; box-shadow: 0 0 30px rgba(176,107,255,.4); }
+.case-result.legend .res-art { border-color: #ffb347; box-shadow: 0 0 34px rgba(255,179,71,.5); }
+
+.res-img { width: 100%; height: 100%; object-fit: cover; }
+.res-img-emoji { font-size: 58px; }
+
+.drop-list { display: flex; flex-direction: column; gap: 8px; }
+
+.drop-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #171717;
+  border: 1px solid #242424;
+  border-radius: 14px;
+  padding: 8px 10px;
+}
+
+.drop-row.rare   { border-color: rgba(77,141,255,.45); }
+.drop-row.epic   { border-color: rgba(176,107,255,.45); }
+.drop-row.legend { border-color: rgba(255,179,71,.5); }
+
+.drop-icon {
+  width: 30px; height: 30px;
+  flex: 0 0 30px;
+  border-radius: 9px;
+  background: #101010;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  font-size: 18px;
+}
+
+.drop-img { width: 100%; height: 100%; object-fit: cover; }
+.drop-img-emoji { font-size: 18px; }
+
+.drop-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.drop-val { font-size: 12px; font-weight: 800; color: var(--green); }
+.drop-chance { font-size: 12px; font-weight: 700; color: var(--muted); min-width: 44px; text-align: right; }
+
 
 /* ---------- leaderboard ---------- */
 .lb { display: flex; flex-direction: column; gap: 8px; }
