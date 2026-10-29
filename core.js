@@ -117,10 +117,8 @@
 
   function diamond(size) {
     size = size || 18;
-    return '<svg class="diamond" width="' + size + '" height="' + size + '" viewBox="0 0 24 24" aria-hidden="true">' +
-      '<path d="M12 2L5 8l7 14 7-14z" fill="#4d8dff"/>' +
-      '<path d="M12 2L5 8h14z" fill="#7cb9ff"/>' +
-      '<path d="M12 2v20" stroke="#2c5fd0" stroke-width="1" stroke-opacity=".55"/></svg>';
+    return '<img class="diamond" src="assets/ton.png" width="' + size + '" height="' + size +
+      '" alt="TON" />';
   }
 
   function userName() {
